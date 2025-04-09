@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function() {
+    const titleInput = document.getElementById("template-title");
+    const addNewFieldButton = document.getElementById("newField-btn");
+    const fieldsContainer = document.getElementById("field-container");
+    const clearFieldsButton = document.getElementById("clearFields-btn");
+    const saveTemplateButton = document.getElementById("saveTemplate-btn");
+    const outputDisplay = document.getElementById("output");
+    const clearSavedButton = document.getElementById("clearSaved-btn");
+    
+
+    // loading existing forms from local storage (if any)
+    let templateTitles = JSON.parse(localStorage.getItem("templateTitles")) || [];
+
+    // function to update output
+    function updateOutput() {
+        outputDisplay.textContent = JSON.stringify(templateTitles, null, 2); // array formatting
+    }
+
+    // displaying existing data (for testing)
+    updateOutput();
+
+    // function for adding new input field dynamically
+    addNewFieldButton.addEventListener("click", function() {
+        const fieldCount = fieldsContainer.querySelectorAll(".form-field").length;
+        if (fieldCount >= 100) {
+            alert("You may register up to 100 assets at one time. To register more assets, first submit current entries.");
+            return;
+        }
+        const newField = document.createElement("input");
+        newField.type = "text";
+
+        const newCount = fieldCount + 1;
+        newField.placeholder = `Enter ${getOrdinal(newCount)} Asset`;
+        newField.classList.add("form-field");
+        fieldsContainer.appendChild(newField);
+
+       // const fieldCount = fieldsContainer.querySelectorAll(".form-field").length + 1; // Determines index of the new field(s)
+                                                                                       // (Counts existing fields + 1)
+
+        // Creates a dynamic placeholder based on field number
+        /*let suffix;
+        if (fieldCount === 1) {
+            suffix = "1st";   
+        } else if (fieldCount === 2) {
+            suffix = "2nd";
+        } else if (fieldCount === 3) {
+            suffix = "3rd";
+        } else {
+            suffix = `${fieldCount}th`;
+        }    */            
+
+
+        //newField.placeholder = `Enter ${suffix} Asset`; // Added to put descriptive text in field, then decided to try something more dynamic
+        
+        
+    })
+
+    // Function for determining using the correct ordinal suffix for each field (st, nd, rd, th)
+    // Called in addNewFieldButton
+    function getOrdinal(n) {
+        const s = ["th", "st", "nd", "rd"];
+        const v = n % 100;
+        return n + (s[(v - 20) % 10] || s[v] || s[0]);
+    }
+
+    /* Original function for adding new input field dynamically
+    addNewFieldButton.addEventListener("click", function() {
+        const newField = document.createElement("input");
+        newField.type = "text";
+        newField.classList.add("form-field");
+        fieldsContainer.appendChild(newField);
+    }) */
+
+    // function for deleting all fields
+    clearFieldsButton.addEventListener("click", function(){
+        fieldsContainer.innerHTML = "";
+    })
+
+    // function for saving form
+    saveTemplateButton.addEventListener("click", function() {
+        const title = titleInput.value.trim();
+        const fieldValues = Array.from(fieldsContainer.querySelectorAll(".form-field"))
+                            .map(field => field.value.trim())
+                            .filter(value => value !== ""); // removes empty fields
+
+        if (title || fieldValues.length > 0) { // checking if there are values in the array
+            templateTitles.push({title, fields: fieldValues}); // storing the data as an object
+            localStorage.setItem("templateTitles", JSON.stringify(templateTitles)); // save to local storage
+            updateOutput(); // update display
+            titleInput.value = ""; // clear title
+            fieldValues.innerHTML = ""; // clearing fields
+        }
+    });
+
+
+    // function for clearing storage
+    clearSavedButton.addEventListener("click", function() {
+        localStorage.removeItem("templateTitles"); // removing titles from storage
+        templateTitles = []; // resetting array
+        updateOutput(); // updating display
+    });
+    
+});
+
+
+
+</script>
+
+
+
+<style>
+    body {
+    font-family: Arial, sans-serif;
+    /* display: flex;
+    flex-direction: column; */
+    /* align-items: center; */
+    /* margin: 20; */
+    background-color: #0d25dc;
+}
+
+.form-container {
+    width: 80%;
+    max-width: 600px;
+    background: white;
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+}
+
+#template-title {
+    width: 100%;
+    font-size: 24px;
+    border: none;
+    outline: none;
+    border-bottom: 2px solid #ccc;
+}
+
+#template-title:focus {
+    border-bottom: 2px solid #007bff;
+}
+
+#newField-btn {
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+#newField-btn:hover {
+    background-color: #bebcbcd1;
+}
+
+#clearFields-btn {
+    margin: 10px;
+    cursor: pointer;
+}
+
+#clearFields-btn:hover {
+    background-color: #bebcbcd1;
+}
+
+#saveTemplate-btn {
+    margin-top: 8px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+#saveTemplate-btn:hover {
+    background-color: #0056b3;
+}
+
+.output-container {
+    width: 80%;
+    max-width: 600px;
+    background: white;
+    padding: 10px;
+}
+
+#clearSaved-btn {
+    margin-top: 5px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+#clearSaved-btn:hover {
+    background-color: #0056b3;
+}
+
+pre {
+    background: #f4f4f4;
+    padding: 10px;
+}
+
+</style>
+
+
+<head>
+    <title>Register Asset(s)</title> <!-- Changed to reflect functionality-->
+    <link rel="stylesheet" href="templateStyle.css">
+</head>
+<body>
+    <!-- container for the form -->
+    <div class="form-container">
+        <input type="text" id="template-title" placeholder="Enter template title here">
+        <!-- <button id="newField-btn">Add New Field</button>  COMMENTED OUT FOR TESTING REFORMAT -->
+        <button id="newField-btn">Register New Asset</button>
+        <button id = "clearFields-btn">Clear Fields</button>
+
+        <div id="field-container"></div> 
+
+        <button id="saveTemplate-btn">Save Template</button>
+    </div>
+
+    <!-- container for the output -->
+    <div class="output-container">
+        <h3>Saved Forms:</h3>
+        <pre id="output"></pre>
+        <button id="clearSaved-btn">Clear Saved Forms</button>
+    </div>
+
+
+    <script src="template.js"></script>
+</body>
+</html>

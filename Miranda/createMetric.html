@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+
+<!-- 
+add title line to be able to name template
+
+add edit functionality
+needs exception handling for title line - cant be saved without a title and cant save that title if there is already another one with the same name
+
+-->
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Metric Template</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: auto;
+            padding: 80px 20px 20px;
+            background-color: #f4f4f4;
+        }
+
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            background-color: #222e86;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .template-container {
+            background: white;
+            padding: 20px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        #asset {
+            margin-right: 20px;
+        }
+
+        #newField-btn,
+        #clearFields-btn {
+            margin-left: 0;
+        }
+
+        .new-field {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .new-field input {
+            flex: 1;
+            padding: 5px;
+            margin-right: 10px;
+        }
+
+        .title-container input {
+            flex: 1;
+            padding: 5px;
+            margin-right: 10px;
+        }
+
+        .delete-button {
+            background: rgb(214, 24, 24);
+            color: white;
+            border: none;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        .delete-button:hover {
+            background: rgb(137, 15, 15);
+        }
+
+        #newField-btn {
+            margin-top: 10px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        #newField-btn:hover {
+            background-color: #bebcbcd1;
+        }
+
+        #clearFields-btn {
+            margin: 10px;
+            cursor: pointer;
+        }
+
+        #clearFields-btn:hover {
+            background-color: #bebcbcd1;
+        }
+
+
+        #saveTemplate-btn {
+            margin-top: 8px;
+            background-color: #3e50d3;
+            color: white;
+            border: none;
+            cursor: pointer;
+
+        }
+
+        #saveTemplate-btn:hover {
+            background-color: #222e86;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="top-bar">
+        <p>Welcome to Asset Pro!</p>
+    </div>
+
+    <div class="template-container">
+        <label for="asset">Choose an asset:</label>
+        <select id="asset">
+            <!-- hard coded values. eventually needs to be fixed so it is dynamic -->
+            <option value="car">Car</option>
+            <option value="device">Device</option>
+            <option value="employee">Employee</option>
+        </select>
+
+        <div class="title-container">
+            <label for="title">Template Title:</label>
+            <input type="text" id="title" class="template-container" placeholder="Enter a title for the template.">
+        </div>
+
+        <button id="newField-btn">Add New Field</button>
+        <button id="clearFields-btn">Clear All Fields</button>
+
+        <div id="field-container"></div> <!-- container for the dynamic fields -->
+
+        <button id="saveTemplate-btn">Save Template</button>
+    </div>
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const assetDropdown = document.getElementById("asset");
+            const addNewFieldButton = document.getElementById("newField-btn");
+            const fieldsContainer = document.getElementById("field-container");
+            const clearFieldsButton = document.getElementById("clearFields-btn");
+            const saveTemplateButton = document.getElementById("saveTemplate-btn");
+
+
+            // loading existing forms from local storage (if any)
+            let templateTitles = JSON.parse(localStorage.getItem("templateTitles")) || [];
+
+
+            // function for adding new input field dynamically
+            addNewFieldButton.addEventListener("click", function () {
+
+                // adds div around the new input fields
+                const fieldWrapper = document.createElement("div");
+                fieldWrapper.classList.add("new-field");
+
+                // code for actually making the new fields
+                const newField = document.createElement("input");
+                newField.type = "text";
+                newField.classList.add("form-field");
+                newField.placeholder = "Enter text here";
+
+                const deleteButton = document.createElement("button");
+                deleteButton.textContent = "X";
+                deleteButton.classList.add("delete-button");
+
+                // functionality for removing the field when delete button is clicked
+                deleteButton.addEventListener("click", function () {
+                    fieldWrapper.remove();
+                })
+
+                fieldWrapper.appendChild(newField)
+                fieldWrapper.appendChild(deleteButton);
+                fieldsContainer.appendChild(fieldWrapper);
+            })
+
+            // function for deleting all fields
+            clearFieldsButton.addEventListener("click", function () {
+                fieldsContainer.innerHTML = "";
+            })
+
+            // function for saving form
+            saveTemplateButton.addEventListener("click", function () {
+                try {
+                    const title = assetDropdown.value;
+                    const fieldValues = Array.from(fieldsContainer.querySelectorAll(".form-field"))
+                        .map(field => field.value.trim())
+                        .filter(value => value !== ""); // removes empty fields
+
+                    if (fieldValues.length === 0) { // if fields have no values
+                        alert("Error: You must add at least one non-empty field before saving template.");
+                        return;
+                    }
+
+
+                    templateTitles.push({ title, fields: fieldValues }); // storing the data as an object
+                    localStorage.setItem("templateTitles", JSON.stringify(templateTitles)); // save to local storage
+                    // updateOutput(); // update display
+                    fieldValues.innerHTML = ""; // clearing fields
+                    alert("Template saved successfully.")
+
+                    location.reload();
+                } catch (Error) {
+                    alert(error.message);
+                };
+
+            });
+
+
+
+        });
+    </script>
+</body>
+
+</html>

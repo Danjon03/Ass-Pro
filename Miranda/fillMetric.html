@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- 
+what do we do if there are multiple templates for the same asset 
+ 
+add a save button at the bottom
+add another dropdown to choose from the template's title
+
+
+-->
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fill Metric</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: auto;
+            padding: 80px 20px 20px;
+            background-color: #f4f4f4;
+        }
+
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            background-color: #222e86;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .template-container {
+            background: white;
+            padding: 20px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .field-label {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .message {
+            color: red;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        .form-field {
+            margin-bottom: 10px;
+            padding: 5px;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="top-bar">
+        <p>Welcome to Asset Pro!</p>
+    </div>
+
+    <div class="template-container">
+        <label for="asset">Choose an asset:</label>
+        <select id="asset">
+            <!-- hard coded values. eventually needs to be fixed so it is dynamic -->
+            <option value="car">Car</option>
+            <option value="device">Device</option>
+            <option value="employee">Employee</option>
+        </select>
+
+        <label for="template">Choose a template:</label>
+        <select id="template-title">
+            <option disabled selected>Select a template</option>
+        </select>
+
+        <div id="form-fields"></div>
+        <div id="message" class="message"></div>
+
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const assetSelect = document.getElementById("asset");
+            const templateSelect = document.getElementById("template-title");
+            const formFieldsContainer = document.getElementById("form-fields");
+            const messageBox = document.getElementById("message");
+
+            const templateTitles = JSON.parse(localStorage.getItem("templateTitles")) || [];
+
+            assetSelect.addEventListener("change", function () {
+                const selectedAsset = assetSelect.value;
+                formFieldsContainer.innerHTML = "";
+                messageBox.textContent = "";
+                templateSelect.innerHTML = '<option disabled selected>Select a template</option>';
+
+                const templateForAsset = templateTitles.filter(t => t.asset === selectedAsset);
+
+                if (templateForAsset.length === 0) {
+                    messageBox.textContent = "No templates found for this asset.";
+                    return;
+                }
+
+                templateForAsset.forEach(t => {
+                    const option = document.createElement("option");
+                    option.value = t.title;
+                    option.textContent = t.title;
+                    templateSelect.appendChild(option);
+                });
+
+            });
+
+            // loading template fields when a template is selected
+            templateSelect.addEventListener("change", function () {
+                const selectedAsset = assetSelect.value;
+                const selectedTitle = templateSelect.value;
+
+                const template = templateTitles.find(t => t.asset === selectedAsset && t.title === selectedTitle);
+
+                formFieldsContainer.innerHTML = "";
+                messageBox.textContent = "";
+
+                if (!template) {
+                    messageBox.textContent = "Template not found.";
+                    return;
+                }
+
+                // Generate input fields based on the saved template
+                template.fields.forEach(fieldLabel => {
+                    const label = document.createElement("div");
+                    label.className = "field-label";
+                    label.textContent = fieldLabel;
+
+                    const input = document.createElement("input");
+                    input.type = "text";
+                    input.className = "form-field";
+                    input.placeholder = `Enter ${fieldLabel}`;
+
+                    formFieldsContainer.appendChild(label);
+                    formFieldsContainer.appendChild(input);
+                });
+
+
+            });
+        });
+    </script>
+
+
+</body>
+
+</html>

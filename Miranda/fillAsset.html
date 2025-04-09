@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #0d25dc;
+        }
+        form {
+            max-width: 400px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background: white;
+        }
+        label, input {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="form-container"></div>
+
+    <script>
+        // Given array
+        const formFields = ['DevicesTemplate', 'Device ID', 'Device Name', 'Operating System', 'Brand'];
+
+        function generateForm(fields) {
+            const container = document.getElementById('form-container');
+
+            // Create form element
+            const form = document.createElement('form');
+            form.id = 'dynamicForm';
+
+            // Create title
+            const title = document.createElement('h2');
+            title.textContent = fields[0];
+            form.appendChild(title);
+
+            // Generate input fields
+            for (let i = 1; i < fields.length; i++) {
+                const label = document.createElement('label');
+                label.textContent = fields[i];
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.name = fields[i];
+
+                form.appendChild(label);
+                form.appendChild(input);
+            }
+
+            // Submit button
+            const submitButton = document.createElement('button');
+            submitButton.type = 'submit';
+            submitButton.textContent = 'Submit';
+            form.appendChild(submitButton);
+
+            // Append form to container
+            container.appendChild(form);
+
+            // Handle form submission
+            form.addEventListener('submit', function (event) {
+                event.preventDefault(); // Prevent page reload
+
+                const formData = {};
+                const inputs = form.querySelectorAll('input');
+
+                inputs.forEach(input => {
+                    formData[input.name] = input.value;
+                });
+
+                console.log(formData); // Output the dictionary to console
+                alert('Form Submitted! Check console for the dictionary.');
+            });
+        }
+
+        // Call function to generate the form
+        generateForm(formFields);
+    </script>
+
+</body>
+</html>
