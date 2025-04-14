@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Page</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+        }
+        .top-bar {
+            background-color: #222e86;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 10;
+        }
+        .menu-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 80px 20px 20px;
+            gap: 20px;
+        }
+        .assets, .metrics {
+            display: flex;
+            flex-direction: column;
+            width: 45%;
+            gap: 15px;
+        }
+        .assets h2, .metrics h2 {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 20px;
+            color: black;
+        }
+        button {
+            padding: 15px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #222e86;
+            color: white;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #3e50d3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="top-bar">
+        <p style="display: inline-block; margin-right: 20px;">Welcome to Asset Pro!</p>
+        <div style="display: inline-flex; gap: 10px; align-items: center; font-size: 14px;">
+            <button style="font-size: 12px; padding: 8px 12px;" onclick="navigateTo('admin/userProfile')">User Profile</button>
+            <button style="font-size: 12px; padding: 8px 12px;" onclick="navigateTo('admin/listUsers')">Admin Permissions</button>
+            <button style="font-size: 12px; padding: 8px 12px;" onclick="navigateTo('settings')">Settings</button>
+        </div>
+    </div>
+
+    <div class="menu-content">
+        <div class = "assets">
+            <h2>Assets</h2>
+            <button onclick="navigateTo('assets/createAsset')">Create Asset</button>
+            <!-- <button onclick="navigateTo('assets/fillAsset')">Fill Out Assets</button> -->
+            <button onclick="navigateTo('assets/viewAssets')">Asset History</button>
+        </div>
+
+        <div class = "metrics">
+            <h2>Metrics</h2>
+            <button onclick="navigateTo('metrics/createMetric')">Create Metric</button>
+            <button onclick="navigateTo('metrics/fillMetric')">Fill Out Metrics</button>
+            <button onclick="navigateTo('metrics/viewMetrics')">Metric History</button>
+        </div>
+    </div>
+
+    <script>
+        function navigateTo(page) {
+            window.location.href = page + ".html";
+        }
+    </script>
+</body>
+
+</html>
