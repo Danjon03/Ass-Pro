@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>View All Assets</title>
+  <style>
+    body {
+      background-color: #0d25dc;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    h2 {
+      color: white;
+    }
+    h3 {
+      background-color: #0d25dc;
+      padding: 10px;
+      color: white;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      text-align: left;
+      padding: 10px;
+    }
+    th {
+      background-color: #007bff;
+      color: white;
+    }
+    tr:not(:first-child) {
+      background-color: white;
+      color: black;
+    }
+    .edit-button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.6);
+    }
+    .modal-content {
+      background-color: white;
+      margin: 10% auto;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 500px;
+      color: black;
+    }
+    .modal-content input {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 8px;
+    }
+    .modal-content button {
+      margin-right: 10px;
+      padding: 8px 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>All Registered Assets</h2>
+  <div id="assetDisplay"></div>
+
+  <!-- Modal -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <h3>Edit Asset</h3>
+      <form id="editForm"></form>
+      <button id="saveBtn">Save</button>
+      <button id="cancelBtn">Cancel</button>
+    </div>
+  </div>
+
+  <script>
+    const assetDisplay = document.getElementById("assetDisplay");
+    const modal = document.getElementById("editModal");
+    const form = document.getElementById("editForm");
+    const saveBtn = document.getElementById("saveBtn");
+    const cancelBtn = document.getElementById("cancelBtn");
+
+    let currentEditIndex = null;
+    const assets = JSON.parse(localStorage.getItem("templateTitles")) || [];
+    const formTemplates = JSON.parse(localStorage.getItem("formTemplates")) || {};
+
+    function displayAssets() {
+      assetDisplay.innerHTML = "";
+
+      const grouped = {};
+      assets.forEach(asset => {
+        if (!grouped[asset.assetType]) grouped[asset.assetType] = [];
+        grouped[asset.assetType].push(asset);
+      });
+
+      Object.keys(grouped).forEach(type => {
+        const section = document.createElement("div");
+        const table = document.createElement("table");
+
+        section.innerHTML = `<h3>Asset Type: ${type}</h3>`;
+        const header = table.insertRow();
+        ["Asset", "Submitted By", "Timestamp", "Form Completed?", "Form Exists?", "Form Data"].forEach(text => {
+          const th = document.createElement("th");
+          th.textContent = text;
+          header.appendChild(th);
+        });
+
+        grouped[type].forEach((asset, index) => {
+          const row = table.insertRow();
+          row.insertCell().textContent = asset.field || "";
+          row.insertCell().textContent = asset.createdBy || "";
+          row.insertCell().textContent = asset.createdAt || "";
+          row.insertCell().innerHTML = asset.formCompleted ? `<span style="color: green">Yes</span>` : `<span style="color: red">No</span>`;
+          row.insertCell().innerHTML = formTemplates[asset.assetType] ? `<span style="color: green">Yes</span>` : `<span style="color: red">No</span>`;
+
+          const formCell = row.insertCell();
+          const formData = asset.formData || {};
+          const templateFields = formTemplates[asset.assetType];
+
+          if (!templateFields) {
+            formCell.innerHTML = `N/A <button class="edit-button" data-index="${assets.indexOf(asset)}">Edit</button>`;
+          } else {
+            const lines = templateFields.map(field => {
+              const value = formData[field] || "";
+              return `<strong>${field}:</strong> ${value}`;
+            }).join("<br>");
+            formCell.innerHTML = `${lines}<br><button class="edit-button" data-index="${assets.indexOf(asset)}">Edit</button>`;
+          }
+        });
+
+        section.appendChild(table);
+        assetDisplay.appendChild(section);
+      });
+    }
+
+    function openModal(index) {
+      currentEditIndex = index;
+      form.innerHTML = "";
+
+      const asset = assets[index];
+      const template = formTemplates[asset.assetType];
+
+      if (!template) {
+        form.innerHTML = "<p>No form available for this asset type.</p>";
+        return;
+      }
+
+      const currentData = asset.formData || {};
+
+      template.forEach(field => {
+        const label = document.createElement("label");
+        label.textContent = field;
+        const input = document.createElement("input");
+        input.name = field;
+        input.value = currentData[field] || "";
+        form.appendChild(label);
+        form.appendChild(input);
+      });
+
+      modal.style.display = "block";
+    }
+
+    function closeModal() {
+      modal.style.display = "none";
+      currentEditIndex = null;
+    }
+
+    assetDisplay.addEventListener("click", function (e) {
+      if (e.target.classList.contains("edit-button")) {
+        const index = parseInt(e.target.dataset.index);
+        openModal(index);
+      }
+    });
+
+    cancelBtn.addEventListener("click", function () {
+      closeModal();
+    });
+
+    saveBtn.addEventListener("click", function () {
+      if (currentEditIndex !== null) {
+        const asset = assets[currentEditIndex];
+        const formData = {};
+        form.querySelectorAll("input").forEach(input => {
+          formData[input.name] = input.value;
+        });
+
+        asset.formData = formData;
+        asset.formCompleted = true;
+        localStorage.setItem("templateTitles", JSON.stringify(assets));
+        displayAssets();
+        closeModal();
+      }
+    });
+
+    displayAssets();
+  </script>
+
+</body>
+</html>

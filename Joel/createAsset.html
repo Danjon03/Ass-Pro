@@ -1,320 +1,246 @@
 <!DOCTYPE html>
 <html>
-
-<script>
-
-document.addEventListener("DOMContentLoaded", function() {
-    //const titleInput = document.getElementById("template-title");
-    const addNewFieldButton = document.getElementById("newField-btn");
-    const fieldsContainer = document.getElementById("field-container");
-    const clearFieldsButton = document.getElementById("clearFields-btn");
-    const saveTemplateButton = document.getElementById("saveTemplate-btn");
-    const outputDisplay = document.getElementById("output");
-    const clearSavedButton = document.getElementById("clearSaved-btn");
-    const successModal = document.getElementById("successModal");
-    const closeButton = document.querySelector(".close-button");
-    const okButton = document.getElementById("ok-button");
-
-    
-    //Function to close modal
-    function closeModal() {
-        successModal.style.display = "none";
+<head>
+  <meta charset="UTF-8">
+  <title>Register Asset(s)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #0d25dc;
     }
-
-    // Event listeners for closing the modal when either the "OK" or "X" buttons are clicked
-    closeButton.addEventListener("click", closeModal);
-    okButton.addEventListener("click", closeModal);
-    
-
-    // loading existing forms from local storage (if any)
-    let templateTitles = JSON.parse(localStorage.getItem("templateTitles")) || [];
-
-    // function to update output
-    function updateOutput() {
-        outputDisplay.textContent = JSON.stringify(templateTitles, null, 2); // array formatting
+    .form-container, .output-container {
+      width: 80%;
+      max-width: 600px;
+      background: white;
+      padding: 10px;
+      margin-bottom: 20px;
+      border-radius: 5px;
     }
+    #newField-btn, #clearFields-btn, #saveTemplate-btn, #clearSaved-btn {
+      margin-top: 10px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    #newField-btn:hover, #clearFields-btn:hover, #saveTemplate-btn:hover, #clearSaved-btn:hover {
+      background-color: #0056b3;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 10px;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+      background-color: #fff;
+      margin: 15% auto;
+      padding: 20px;
+      border-radius: 10px;
+      width: 300px;
+      text-align: center;
+    }
+    .close-button {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      color: #aaa;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    #ok-button {
+      margin-top: 20px;
+      padding: 8px 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #ok-button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
 
-    // displaying existing data (for testing)
-    updateOutput();
+  <div class="form-container">
+    <h2>Asset Registration</h2>
+    <button id="newField-btn">Register New Asset</button>
+    <button id="clearFields-btn">Clear Fields</button>
 
-    // function for adding new input field dynamically
-    addNewFieldButton.addEventListener("click", function() {
+    <div id="field-container"></div>
+
+    <label for="asset-type">Select Asset Type:</label>
+    <select id="asset-type"></select>
+
+    <button id="saveTemplate-btn">Save Assets</button>
+  </div>
+
+  <div class="output-container">
+    <h3>Saved Forms:</h3>
+    <pre id="output"></pre>
+    <button id="clearSaved-btn">Clear Saved Forms</button>
+  </div>
+
+  <div id="successModal" class="modal">
+    <div class="modal-content">
+      <span class="close-button">&times;</span>
+      <p>Asset(s) saved successfully!</p>
+      <button id="ok-button">OK</button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const currentUser = "placeholderUser";
+      const addNewFieldButton = document.getElementById("newField-btn");
+      const fieldsContainer = document.getElementById("field-container");
+      const clearFieldsButton = document.getElementById("clearFields-btn");
+      const saveTemplateButton = document.getElementById("saveTemplate-btn");
+      const outputDisplay = document.getElementById("output");
+      const clearSavedButton = document.getElementById("clearSaved-btn");
+      const assetTypeDropdown = document.getElementById("asset-type");
+      const successModal = document.getElementById("successModal");
+      const closeButton = document.querySelector(".close-button");
+      const okButton = document.getElementById("ok-button");
+
+      closeButton.addEventListener("click", () => successModal.style.display = "none");
+      okButton.addEventListener("click", () => successModal.style.display = "none");
+
+      let templateTitles = JSON.parse(localStorage.getItem("templateTitles")) || [];
+
+      function updateOutput() {
+        if (templateTitles.length === 0) {
+          outputDisplay.innerHTML = "<em>No assets saved.</em>";
+        } else {
+          outputDisplay.innerHTML = templateTitles.map(entry =>
+            `<strong>${entry.assetType}</strong>: ${entry.field}<br>
+            <em>Created by:</em> ${entry.createdBy}<br>
+            <em>At:</em> ${entry.createdAt}`
+          ).join("<hr>");
+        }
+      }
+
+      updateOutput();
+
+      addNewFieldButton.addEventListener("click", function () {
         const fieldCount = fieldsContainer.querySelectorAll(".form-field").length;
         if (fieldCount >= 100) {
-            alert("You may register up to 100 assets at one time. To register more assets, first submit current entries.");
-            return;
+          alert("You may register up to 100 assets at one time.");
+          return;
         }
         const newField = document.createElement("input");
         newField.type = "text";
-
-        const newCount = fieldCount + 1;
-        newField.placeholder = `Enter ${getOrdinal(newCount)} Asset`;
+        newField.placeholder = `Enter ${getOrdinal(fieldCount + 1)} Asset`;
         newField.classList.add("form-field");
         fieldsContainer.appendChild(newField);
+      });
 
-       // const fieldCount = fieldsContainer.querySelectorAll(".form-field").length + 1; // Determines index of the new field(s)
-                                                                                       // (Counts existing fields + 1)
+      clearFieldsButton.addEventListener("click", () => fieldsContainer.innerHTML = "");
 
-        // Creates a dynamic placeholder based on field number
-        /*let suffix;
-        if (fieldCount === 1) {
-            suffix = "1st";   
-        } else if (fieldCount === 2) {
-            suffix = "2nd";
-        } else if (fieldCount === 3) {
-            suffix = "3rd";
-        } else {
-            suffix = `${fieldCount}th`;
-        }    */            
+      saveTemplateButton.addEventListener("click", function () {
+        const title = "Asset Registration";
+        const inputFields = fieldsContainer.querySelectorAll(".form-field");
+        const selectedAssetType = assetTypeDropdown.value;
 
+        const fieldValues = Array.from(inputFields)
+          .map(field => field.value.trim())
+          .filter(value => value !== "");
 
-        //newField.placeholder = `Enter ${suffix} Asset`; // Added to put descriptive text in field, then decided to try something more dynamic
-        
-        
-    })
+        if (fieldValues.length === 0) {
+          alert("Data must be present in at least 1 field before saving.");
+          return;
+        }
 
-    // Function for determining using the correct ordinal suffix for each field (st, nd, rd, th)
-    // Called in addNewFieldButton
-    function getOrdinal(n) {
+        fieldValues.forEach(fieldValue => {
+          templateTitles.push({
+            title,
+            assetType: selectedAssetType,
+            field: fieldValue,
+            createdBy: currentUser,
+            createdAt: new Date().toLocaleString()
+          });
+        });
+
+        localStorage.setItem("templateTitles", JSON.stringify(templateTitles));
+        updateOutput();
+        fieldsContainer.innerHTML = "";
+        successModal.style.display = "block";
+      });
+
+      clearSavedButton.addEventListener("click", function () {
+        localStorage.removeItem("templateTitles");
+        templateTitles = [];
+        updateOutput();
+      });
+
+      function getOrdinal(n) {
         const s = ["th", "st", "nd", "rd"];
         const v = n % 100;
         return n + (s[(v - 20) % 10] || s[v] || s[0]);
-    }
+      }
 
-    /* Original function for adding new input field dynamically
-    addNewFieldButton.addEventListener("click", function() {
-        const newField = document.createElement("input");
-        newField.type = "text";
-        newField.classList.add("form-field");
-        fieldsContainer.appendChild(newField);
-    }) */
+      function preloadHardcodedForms() {
+        const defaultTemplates = {
+          "Employee": [
+            "Full Name", "Date of Birth (mm/dd/yyyy)", "Home Address",
+            "Phone Number (xxx-xxx-xxxx)", "Date of Hire (mm/dd/yyyy)", "Job Title"
+          ],
+          "Vehicle": [
+            "Model", "Year Model (xxxx)", "Manufacturer", "VIN",
+            "Date of Purchase (mm/dd/yyyy)", "Mileage Upon Purchase", "Fuel Type"
+          ],
+          "Laptop": [
+            "Brand", "Model", "Operating System", "Serial Number",
+            "Date of Purchase (mm/dd/yyyy)", "Warranty Expiration Date (mm/dd/yyyy)"
+          ]
+        };
 
-    // function for deleting all fields
-    clearFieldsButton.addEventListener("click", function(){
-        fieldsContainer.innerHTML = "";
-    })
+        let existing = JSON.parse(localStorage.getItem("formTemplates")) || {};
 
-    // function for saving form
-    /*saveTemplateButton.addEventListener("click", function() {
-        const title = titleInput.value.trim();
-        const fieldValues = Array.from(fieldsContainer.querySelectorAll(".form-field"))
-                            .map(field => field.value.trim())
-                            .filter(value => value !== ""); // removes empty fields
-
-        if (title || fieldValues.length > 0) { // checking if there are values in the array
-            templateTitles.push({title, fields: fieldValues}); // storing the data as an object
-            localStorage.setItem("templateTitles", JSON.stringify(templateTitles)); // save to local storage
-            updateOutput(); // update display
-            titleInput.value = ""; // clear title
-            //fieldValues.innerHTML = ""; // clearing fields
+        // Only add if not already present
+        let changed = false;
+        for (const [type, fields] of Object.entries(defaultTemplates)) {
+          if (!existing[type]) {
+            existing[type] = fields;
+            changed = true;
+          }
         }
-    });*/
 
-    saveTemplateButton.addEventListener("click", function() {
-        //const title = titleInput.value.trim();
-        const title = "Asset Registration"; // Commented-out the above line and hard-coded a working title for the createAsset page
-        const inputFields = fieldsContainer.querySelectorAll(".form-field");
-
-        const fieldValues = Array.from(inputFields)
-                            .map(field => field.value.trim())
-                            .filter(value => value !== ""); // removes empty fields
-
-        if (title || fieldValues.length > 0) { // checking if there are values in the array
-            templateTitles.push({title, fields: fieldValues}); // storing the data as an object with title & fields
-            localStorage.setItem("templateTitles", JSON.stringify(templateTitles)); // save to local storage
-            updateOutput(); // update display
-            //titleInput.value = ""; // clear title
-            fieldsContainer.innerHTML = ""; // Removes all input fields from page until user generates new ones
-            successModal.style.display = "block"; // Shows the success pop-up 
+        if (changed) {
+          localStorage.setItem("formTemplates", JSON.stringify(existing));
         }
+      }
+
+      function populateAssetTypes() {
+        const templates = JSON.parse(localStorage.getItem("formTemplates")) || {};
+        const allTypes = Object.keys(templates);
+
+        assetTypeDropdown.innerHTML = "";
+        allTypes.forEach(type => {
+          const option = document.createElement("option");
+          option.value = type;
+          option.textContent = type;
+          assetTypeDropdown.appendChild(option);
+        });
+      }
+
+      // Ensure dynamic forms are available
+      preloadHardcodedForms();
+      populateAssetTypes();
     });
-
-
-    // function for clearing storage
-    clearSavedButton.addEventListener("click", function() {
-        localStorage.removeItem("templateTitles"); // removing titles from storage
-        templateTitles = []; // resetting array
-        updateOutput(); // updating display
-    });
-    
-});
-
-
-
-</script>
-
-
-
-<style>
-    body {
-    font-family: Arial, sans-serif;
-    /* display: flex;
-    flex-direction: column; */
-    /* align-items: center; */
-    /* margin: 20; */
-    background-color: #0d25dc;
-}
-
-.form-container {
-    width: 80%;
-    max-width: 600px;
-    background: white;
-    padding: 10px;
-    margin-bottom: 20px;
-    border-radius: 5px;
-}
-
-#template-title {
-    width: 100%;
-    font-size: 24px;
-    border: none;
-    outline: none;
-    border-bottom: 2px solid #ccc;
-}
-
-#template-title:focus {
-    border-bottom: 2px solid #007bff;
-}
-
-#newField-btn {
-    margin-top: 10px;
-    cursor: pointer;
-}
-
-#newField-btn:hover {
-    background-color: #bebcbcd1;
-}
-
-#clearFields-btn {
-    margin: 10px;
-    cursor: pointer;
-}
-
-#clearFields-btn:hover {
-    background-color: #bebcbcd1;
-}
-
-#saveTemplate-btn {
-    margin-top: 8px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
-#saveTemplate-btn:hover {
-    background-color: #0056b3;
-}
-
-.output-container {
-    width: 80%;
-    max-width: 600px;
-    background: white;
-    padding: 10px;
-}
-
-#clearSaved-btn {
-    margin-top: 5px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
-#clearSaved-btn:hover {
-    background-color: #0056b3;
-}
-
-pre {
-    background: #f4f4f4;
-    padding: 10px;
-}
-
-/* Asset Saved Successfully styling */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 999;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.4);
-}
-
-.modal-content {
-    background-color: #fff;
-    margin: 15% auto;
-    padding: 20px;
-    border-radius: 10px;
-    width: 300px;
-    position: relative;
-    text-align: center;
-}
-
-.close-button {
-    position: absolute;
-    top: 8px;
-    right: 12px;
-    color: #aaa;
-    font-size: 24px;
-    cursor: pointer;
-}
-
-#ok-button {
-    margin-top: 20px;
-    padding: 8px 16px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-#ok-button:hover {
-    background-color: #0056b3;
-}
-
-</style>
-
-
-<head>
-    <title>Register Asset(s)</title> <!-- Changed to reflect functionality-->
-    <link rel="stylesheet" href="templateStyle.css">
-</head>
-<body>
-    <!-- container for the form -->
-    <div class="form-container">
-        <!-- <input type="text" id="template-title" placeholder="Enter template title here"> -->
-         <h2 id=""template-title">Asset Registration</h2>
-        <!-- <button id="newField-btn">Add New Field</button>  COMMENTED OUT FOR TESTING REFORMAT -->
-        <button id="newField-btn">Register New Asset</button>
-        <button id = "clearFields-btn">Clear Fields</button>
-
-        <div id="field-container"></div> 
-
-        <button id="saveTemplate-btn">Save Assets</button>
-    </div>
-
-    <!-- container for the output -->
-    <div class="output-container">
-        <h3>Saved Forms:</h3>
-        <pre id="output"></pre>
-        <button id="clearSaved-btn">Clear Saved Forms</button>
-    </div>
-
-
-    <script src="template.js"></script>
-
-    <!-- Successful submission pop-up -->
-    <div id="successModal" class="modal">
-        <div class="modal-content">
-            <span class ="close-button">&times;</span>
-            <p>Asset(s) saved successfully!</p>
-            <button id="ok-button">OK</button>
-        </div>
-    </div>
+  </script>
 
 </body>
 </html>

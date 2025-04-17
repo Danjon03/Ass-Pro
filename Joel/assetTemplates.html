@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Asset Form Templates</title>
+    <style>
+        /* Hidden container so the forms aren’t shown on this page */
+        #formTemplates {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Hidden form templates -->
+<div id="formTemplates">
+    <!-- Employee Form -->
+    <div data-template="Employee">
+        <h3>Employee Record</h3>
+        <label>Full Name: <input type="text" name="fullName" /></label><br>
+        <label>Date of Birth (mm/dd/yyyy): <input type="text" name="dob" /></label><br>
+        <label>Home Address: <input type="text" name="address" /></label><br>
+        <label>Phone Number (xxx-xxx-xxxx): <input type="text" name="phone" /></label><br>
+        <label>Date of Hire (mm/dd/yyyy): <input type="text" name="hireDate" /></label><br>
+        <label>Job Title: <input type="text" name="jobTitle" /></label>
+    </div>
+
+    <!-- Vehicle Form -->
+    <div data-template="Vehicle">
+        <h3>Vehicle Record</h3>
+        <label>Model: <input type="text" name="model" /></label><br>
+        <label>Year Model (xxxx): <input type="text" name="yearModel" /></label><br>
+        <label>Manufacturer: <input type="text" name="manufacturer" /></label><br>
+        <label>VIN: <input type="text" name="vin" /></label><br>
+        <label>Date of Purchase (mm/dd/yyyy): <input type="text" name="purchaseDate" /></label><br>
+        <label>Mileage Upon Purchase: <input type="text" name="mileage" /></label><br>
+        <label>Fuel Type:
+            <select name="fuelType">
+                <option value="Gasoline">Gasoline</option>
+                <option value="Diesel">Diesel</option>
+                <option value="Electric">Electric</option>
+            </select>
+        </label>
+    </div>
+
+    <!-- Laptop Form -->
+    <div data-template="Laptop">
+        <h3>Laptop Record</h3>
+        <label>Brand: <input type="text" name="brand" /></label><br>
+        <label>Model: <input type="text" name="model" /></label><br>
+        <label>Operating System: <input type="text" name="os" /></label><br>
+        <label>Serial Number: <input type="text" name="serial" /></label><br>
+        <label>Date of Purchase (mm/dd/yyyy): <input type="text" name="purchaseDate" /></label><br>
+        <label>Warranty Expiration Date (mm/dd/yyyy): <input type="text" name="warranty" /></label><br>
+    </div>
+</div>
+
+</body>
+</html>

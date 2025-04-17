@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Fill Asset Details</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #0d25dc;
+      padding: 20px;
+      color: white;
+    }
+    select, input, button {
+      display: block;
+      margin: 10px 0;
+      padding: 10px;
+      width: 100%;
+      max-width: 400px;
+    }
+    #form-area {
+      margin-top: 20px;
+      background: white;
+      color: black;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 500px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Fill Asset Information</h2>
+
+  <label for="assetSelect">Select an Asset:</label>
+  <select id="assetSelect">
+    <option value="">-- Select an Asset --</option>
+  </select>
+
+  <div id="form-area"></div>
+
+  <script>
+    const assetSelect = document.getElementById("assetSelect");
+    const formArea = document.getElementById("form-area");
+    const assets = JSON.parse(localStorage.getItem("templateTitles")) || [];
+    const incompleteAssets = assets.filter(asset => !asset.formCompleted);
+    const assetMap = {};
+
+    incompleteAssets.forEach((asset, index) => {
+      const key = `asset-${index}`;
+      assetMap[key] = asset;
+      const option = document.createElement("option");
+      option.value = key;
+      option.textContent = `${asset.assetType}: ${asset.field}`;
+      assetSelect.appendChild(option);
+    });
+
+    assetSelect.addEventListener("change", async function () {
+      const selectedKey = this.value;
+      formArea.innerHTML = "";
+
+      if (!selectedKey || !assetMap[selectedKey]) return;
+
+      const asset = assetMap[selectedKey];
+      const template = await fetchTemplate(asset.assetType);
+
+      if (!template) {
+        formArea.innerHTML = "<p>Form template not found.</p>";
+        return;
+      }
+
+      const form = document.createElement("form");
+
+      if (Array.isArray(template)) {
+        // Dynamic form: create input fields from array
+        template.forEach(fieldTitle => {
+          const label = document.createElement("label");
+          label.textContent = fieldTitle + ": ";
+          const input = document.createElement("input");
+          input.type = "text";
+          input.name = fieldTitle;
+          if (asset.field && fieldTitle.toLowerCase().includes("name")) {
+            input.value = asset.field;
+          }
+          label.appendChild(input);
+          form.appendChild(label);
+        });
+      } else {
+        // Static form HTML from assetTemplates.html
+        const wrapper = document.createElement("div");
+        wrapper.innerHTML = template;
+
+        const inputToFill = {
+          "Employee": "fullName",
+          "Vehicle": "model",
+          "Laptop": "brand"
+        };
+
+        const inputName = inputToFill[asset.assetType] || "";
+        const inputEl = wrapper.querySelector(`input[name="${inputName}"]`);
+        if (inputEl) inputEl.value = asset.field;
+
+        form.appendChild(wrapper);
+      }
+
+      const submit = document.createElement("button");
+      submit.type = "submit";
+      submit.textContent = "Submit Form";
+      form.appendChild(submit);
+
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const formData = {};
+        form.querySelectorAll("input, select").forEach(input => {
+          formData[input.name] = input.value;
+        });
+
+        const index = assets.findIndex(a =>
+          a.assetType === asset.assetType &&
+          a.field === asset.field &&
+          a.createdAt === asset.createdAt
+        );
+
+        if (index !== -1) {
+          assets[index].formCompleted = true;
+          assets[index].formData = formData;
+          localStorage.setItem("templateTitles", JSON.stringify(assets));
+        }
+
+        alert("Form saved successfully!");
+        location.reload();
+      });
+
+      formArea.appendChild(form);
+    });
+
+    async function fetchTemplate(assetType) {
+      // First check dynamic templates
+      const dynamicTemplates = JSON.parse(localStorage.getItem("formTemplates")) || {};
+      if (dynamicTemplates.hasOwnProperty(assetType)) {
+        return dynamicTemplates[assetType];
+      }
+
+      // Then fallback to static templates
+      try {
+        const res = await fetch("assetTemplates.html");
+        const html = await res.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        const template = doc.querySelector(`[data-template="${assetType}"]`);
+        return template ? template.innerHTML : null;
+      } catch (err) {
+        console.error("Error fetching template:", err);
+        return null;
+      }
+    }
+  </script>
+
+</body>
+</html>

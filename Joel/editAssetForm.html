@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Edit Asset Form Templates</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #0d25dc;
+      color: white;
+      padding: 20px;
+    }
+    h2, h3 {
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input[type="text"], select {
+      width: 100%;
+      max-width: 400px;
+      padding: 8px;
+      margin-bottom: 10px;
+    }
+    #newFormTitle {
+      max-width: 220px;
+    }
+    .form-actions {
+      margin-top: 10px;
+    }
+    button {
+      max-width: 220px;
+      padding: 10px;
+      font-weight: bold;
+      background-color: #007bff;
+      border: none;
+      color: white;
+      cursor: pointer;
+      margin-top: 5px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #deleteFormBtn {
+      background-color: #dc3545;
+    }
+    #deleteFormBtn:hover {
+      background-color: #a71d2a;
+    }
+    .field-entry {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 5px;
+    }
+    .field-entry input {
+      flex: 1;
+    }
+    .field-entry button {
+      background-color: #dc3545;
+      padding: 5px 10px;
+      font-size: 14px;
+    }
+    .spaced {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <h2>Edit Asset Forms</h2>
+
+  <label for="formSelector">Select Form to Edit:</label>
+  <select id="formSelector">
+    <option value="">-- Select a Form --</option>
+  </select>
+
+  <div id="editFormArea"></div>
+
+  <div class="spaced">
+    <h3>Create New Form</h3>
+    <label for="newFormTitle">Form Title:</label>
+    <input type="text" id="newFormTitle" placeholder="Enter new form title" />
+
+    <div id="newFieldsContainer"></div>
+    <button onclick="addNewField()">Add Field</button>
+    <button onclick="saveNewForm()">Save New Form</button>
+  </div>
+
+  <script>
+    const defaultTemplates = {
+      "Employee": [
+        "Full Name", "Date of Birth (mm/dd/yyyy)", "Home Address",
+        "Phone Number (xxx-xxx-xxxx)", "Date of Hire (mm/dd/yyyy)", "Job Title"
+      ],
+      "Vehicle": [
+        "Model", "Year Model (xxxx)", "Manufacturer", "VIN",
+        "Date of Purchase (mm/dd/yyyy)", "Mileage Upon Purchase", "Fuel Type"
+      ],
+      "Laptop": [
+        "Brand", "Model", "Operating System", "Serial Number",
+        "Date of Purchase (mm/dd/yyyy)", "Warranty Expiration Date (mm/dd/yyyy)"
+      ]
+    };
+
+    const storageKey = "formTemplates";
+
+    function loadTemplates() {
+      let stored = JSON.parse(localStorage.getItem(storageKey)) || {};
+      let updated = false;
+
+      for (const [type, fields] of Object.entries(defaultTemplates)) {
+        if (!stored[type]) {
+          stored[type] = fields;
+          updated = true;
+        }
+      }
+
+      if (updated) {
+        localStorage.setItem(storageKey, JSON.stringify(stored));
+      }
+
+      return stored;
+    }
+
+    function populateFormSelector(templates) {
+      const formSelector = document.getElementById("formSelector");
+      formSelector.innerHTML = '<option value="">-- Select a Form --</option>';
+      Object.keys(templates).forEach(key => {
+        const option = document.createElement("option");
+        option.value = key;
+        option.textContent = key;
+        formSelector.appendChild(option);
+      });
+    }
+
+    function editForm(type) {
+      const editArea = document.getElementById("editFormArea");
+      editArea.innerHTML = `<h3>Editing: ${type}</h3>`;
+
+      const fields = templates[type] || [];
+      const fieldList = document.createElement("div");
+      fieldList.id = "editFields";
+
+      fields.forEach((field) => {
+        const div = document.createElement("div");
+        div.className = "field-entry";
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = field;
+
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "X";
+        delBtn.onclick = () => div.remove();
+
+        div.appendChild(input);
+        div.appendChild(delBtn);
+        fieldList.appendChild(div);
+      });
+
+      editArea.appendChild(fieldList);
+
+      const saveBtn = document.createElement("button");
+      saveBtn.textContent = "Save Changes";
+      saveBtn.onclick = () => {
+        const updatedFields = [...fieldList.querySelectorAll("input")].map(i => i.value.trim()).filter(Boolean);
+        templates[type] = updatedFields;
+        localStorage.setItem(storageKey, JSON.stringify(templates));
+        alert("Form updated successfully!");
+        location.reload();
+      };
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.id = "deleteFormBtn";
+      deleteBtn.textContent = "Delete This Form";
+      deleteBtn.onclick = () => {
+        if (confirm(`Are you sure you want to delete the ${type} form?`)) {
+          delete templates[type];
+          localStorage.setItem(storageKey, JSON.stringify(templates));
+          alert("Form deleted.");
+          location.reload();
+        }
+      };
+
+      editArea.appendChild(saveBtn);
+      editArea.appendChild(deleteBtn);
+    }
+
+    function addNewField() {
+      const container = document.getElementById("newFieldsContainer");
+      const div = document.createElement("div");
+      div.className = "field-entry";
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.placeholder = "Field title";
+
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "X";
+      delBtn.onclick = () => div.remove();
+
+      div.appendChild(input);
+      div.appendChild(delBtn);
+      container.appendChild(div);
+    }
+
+    function saveNewForm() {
+      const title = document.getElementById("newFormTitle").value.trim();
+      const fields = [...document.getElementById("newFieldsContainer").querySelectorAll("input")]
+        .map(i => i.value.trim()).filter(Boolean);
+
+      if (!title || fields.length === 0) {
+        alert("Please enter a form title and at least one field.");
+        return;
+      }
+
+      if (templates[title]) {
+        alert("A form with this title already exists. Please choose a different title.");
+        return;
+      }
+
+      templates[title] = fields;
+      localStorage.setItem(storageKey, JSON.stringify(templates));
+      alert("New form saved successfully!");
+      location.reload();
+    }
+
+    const templates = loadTemplates();
+    populateFormSelector(templates);
+
+    document.getElementById("formSelector").addEventListener("change", function () {
+      if (this.value) {
+        editForm(this.value);
+      } else {
+        document.getElementById("editFormArea").innerHTML = "";
+      }
+    });
+  </script>
+</body>
+</html>
